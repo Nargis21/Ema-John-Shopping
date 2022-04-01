@@ -3,16 +3,11 @@ import Cart from '../Cart/Cart';
 import { addToDb, getStoredCart } from '../../utilities/fakedb'
 import Product from '../Product/Product';
 import './Shop.css';
+import useProducts from '../../hooks/useProducts';
 
 const Shop = () => {
-    const [products, setProducts] = useState([]);
+    const [products, setProducts] = useProducts()
     const [cart, setCart] = useState([]);
-
-    useEffect(() => {
-        fetch('products.json')
-            .then(res => res.json())
-            .then(data => setProducts(data))
-    }, []);
     useEffect(() => {
         const storedCart = getStoredCart()
         let saveCart = [];
@@ -26,12 +21,22 @@ const Shop = () => {
         }
         setCart(saveCart)
     }, [products])
-    const handleAddToCart = (product) => {
+    const handleAddToCart = (selectedProduct) => {
         // console.log(product);
         // do not do this: cart.push(product);
-        const newCart = [...cart, product];
+        let newCart = [];
+        const exists = cart.find(product => product.id === selectedProduct.id)
+        if (!exists) {
+            selectedProduct.quantity = 1;
+            newCart = [...cart, selectedProduct];
+        }
+        else {
+            const rest = cart.filter(product => product.id !== selectedProduct.id);
+            exists.quantity = exists.quantity + 1;
+            newCart = [...rest, exists];
+        }
         setCart(newCart);
-        addToDb(product.id)
+        addToDb(selectedProduct.id)
     }
 
     return (
